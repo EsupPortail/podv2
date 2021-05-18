@@ -18,7 +18,7 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.dispatch import receiver
 from django.utils.html import format_html
 from django.db.models.signals import pre_delete
@@ -32,7 +32,6 @@ from django.contrib.sites.models import Site
 from django.db.models.signals import post_save
 import importlib
 
-from select2 import fields as select2_fields
 from sorl.thumbnail import get_thumbnail
 from pod.authentication.models import AccessGroup
 from pod.main.models import get_nextautoincrement
@@ -252,21 +251,11 @@ class Channel(models.Model):
     style = models.TextField(
         _('Extra style'), null=True, blank=True,
         help_text=_("The style will be added to your channel to show it"))
-    owners = select2_fields.ManyToManyField(
-        User, related_name='owners_channels', verbose_name=_('Owners'),
-        ajax=True,
-        search_field=lambda q: Q(
-            username__icontains=q) | Q(
-                first_name__icontains=q) | Q(
-                    last_name__icontains=q),
-        blank=True)
-    users = select2_fields.ManyToManyField(
+    owners = models.ManyToManyField(
+        User, related_name='owners_channels', verbose_name=_(
+            'Owners'), blank=True)
+    users = models.ManyToManyField(
         User, related_name='users_channels', verbose_name=_('Users'),
-        ajax=True,
-        search_field=lambda q: Q(
-            username__icontains=q) | Q(
-                first_name__icontains=q) | Q(
-                    last_name__icontains=q),
         blank=True)
     visible = models.BooleanField(
         verbose_name=_('Visible'),
@@ -274,10 +263,8 @@ class Channel(models.Model):
             u'If checked, the channel appear in a list of available '
             + 'channels on the platform.'),
         default=False)
-    allow_to_groups = select2_fields.ManyToManyField(
-        AccessGroup, blank=True, verbose_name=_('Groups'), ajax=True,
-        search_field=lambda q: Q(code_name__icontains=q) | Q(
-            display_name__icontains=q),
+    allow_to_groups = models.ManyToManyField(
+        AccessGroup, blank=True, verbose_name=_('Groups'),
         help_text=_(
             'Select one or more groups who can upload video this channel'))
     sites = models.ManyToManyField(Site)
@@ -323,6 +310,7 @@ def default_site_channel(sender, instance, created, **kwargs):
 class Theme(models.Model):
     parentId = models.ForeignKey(
         'self', null=True, blank=True, related_name="children",
+        on_delete=models.CASCADE,
         verbose_name=_('Theme parent'))
     title = models.CharField(
         _('Title'), max_length=100,
@@ -345,8 +333,9 @@ class Theme(models.Model):
                                  blank=True, null=True,
                                  verbose_name=_('Headband'))
 
-    channel = select2_fields.ForeignKey(
-        'Channel', related_name='themes', verbose_name=_('Channel'))
+    channel = models.ForeignKey(
+        'Channel', related_name='themes', verbose_name=_('Channel'),
+        on_delete=models.CASCADE)
 
     @property
     def sites(self):
@@ -400,11 +389,12 @@ class Theme(models.Model):
 
     def clean(self):
         # Dans le cas où on modifie un theme
-        if Theme.objects.filter(
-                channel=self.channel,
-                slug=slugify(self.title)).exclude(pk=self.id).exists():
-            raise ValidationError("A theme with this name\
-                    already exists in this channel.")
+        if hasattr(self, "channel"):
+            if Theme.objects.filter(
+                    channel=self.channel,
+                    slug=slugify(self.title)).exclude(pk=self.id).exists():
+                raise ValidationError("A theme with this name\
+                        already exists in this channel.")
 
         if self.parentId in self.get_all_children_flat():
             raise ValidationError("A theme cannot have itself \
@@ -497,22 +487,16 @@ class Video(models.Model):
             'numbers, underscore or dash top.'),
         editable=False)
     sites = models.ManyToManyField(Site)
-    type = models.ForeignKey(Type, verbose_name=_('Type'))
-    owner = select2_fields.ForeignKey(
+    type = models.ForeignKey(
+        Type, verbose_name=_('Type'), on_delete=models.CASCADE)
+    owner = models.ForeignKey(
         User,
-        ajax=True,
         verbose_name=_('Owner'),
-        search_field=select_video_owner(),
         on_delete=models.CASCADE)
-    additional_owners = select2_fields.ManyToManyField(
+    additional_owners = models.ManyToManyField(
         User,
         blank=True,
-        ajax=True,
-        js_options={
-            'width': 'off'
-        },
         verbose_name=_('Additional owners'),
-        search_field=select_video_owner(),
         related_name='owners_videos',
         help_text=_('You can add additional owners to the video. They '
                     'will have the same rights as you except that they '
@@ -544,14 +528,14 @@ class Video(models.Model):
         'Separate tags with spaces, '
         'enclose the tags consist of several words in quotation marks.'),
         verbose_name=_('Tags'))
-    discipline = select2_fields.ManyToManyField(
+    discipline = models.ManyToManyField(
         Discipline,
         blank=True,
         verbose_name=_('Disciplines'))
     licence = models.CharField(
         _('Licence'), max_length=8,
         choices=LICENCE_CHOICES, blank=True, null=True)
-    channel = select2_fields.ManyToManyField(
+    channel = models.ManyToManyField(
         Channel,
         verbose_name=_('Channels'),
         blank=True)
@@ -580,7 +564,7 @@ class Video(models.Model):
             'If this box is checked, '
             'the video will only be accessible to authenticated users.'),
         default=False)
-    restrict_access_to_groups = select2_fields.ManyToManyField(
+    restrict_access_to_groups = models.ManyToManyField(
         AccessGroup, blank=True, verbose_name=_('Groups'),
         help_text=_('Select one or more groups who can access to this video'))
     password = models.CharField(
@@ -1016,6 +1000,7 @@ def video_files_removal(sender, instance, using, **kwargs):
 
 class ViewCount(models.Model):
     video = models.ForeignKey(Video, verbose_name=_('Video'),
+                              on_delete=models.CASCADE,
                               editable=False)
     date = models.DateField(
         _(u'Date'), default=date.today, editable=False)
@@ -1163,9 +1148,10 @@ class EncodingVideo(models.Model):
         help_text=_("Please use the only format in encoding choices:")
         + " %s" % ' '.join(str(key) for key, value in ENCODING_CHOICES)
     )
-    video = models.ForeignKey(Video, verbose_name=_('Video'))
+    video = models.ForeignKey(
+        Video, verbose_name=_('Video'), on_delete=models.CASCADE)
     rendition = models.ForeignKey(
-        VideoRendition, verbose_name=_('rendition'))
+        VideoRendition, verbose_name=_('rendition'), on_delete=models.CASCADE)
     encoding_format = models.CharField(
         _('Format'),
         max_length=22,
@@ -1231,7 +1217,8 @@ class EncodingAudio(models.Model):
         _('Name'), max_length=10, choices=ENCODING_CHOICES, default="audio",
         help_text=_("Please use the only format in encoding choices:")
         + " %s" % ' '.join(str(key) for key, value in ENCODING_CHOICES))
-    video = models.ForeignKey(Video, verbose_name=_('Video'))
+    video = models.ForeignKey(
+        Video, verbose_name=_('Video'), on_delete=models.CASCADE)
     encoding_format = models.CharField(
         _('Format'), max_length=22, choices=FORMAT_CHOICES,
         default="audio/mp3",
@@ -1285,7 +1272,8 @@ class PlaylistVideo(models.Model):
         _('Name'), max_length=10, choices=ENCODING_CHOICES, default="360p",
         help_text=_("Please use the only format in encoding choices:")
         + " %s" % ' '.join(str(key) for key, value in ENCODING_CHOICES))
-    video = select2_fields.ForeignKey(Video, verbose_name=_('Video'))
+    video = models.ForeignKey(Video, verbose_name=_('Video'),
+                              on_delete=models.CASCADE)
     encoding_format = models.CharField(
         _('Format'), max_length=22, choices=FORMAT_CHOICES,
         default="application/x-mpegURL",
@@ -1393,8 +1381,8 @@ class EncodingStep(models.Model):
 
 
 class Notes(models.Model):
-    user = select2_fields.ForeignKey(User)
-    video = select2_fields.ForeignKey(Video)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
     note = models.TextField(_('Note'), null=True, blank=True)
 
     @property
@@ -1411,8 +1399,8 @@ class Notes(models.Model):
 
 
 class AdvancedNotes(models.Model):
-    user = select2_fields.ForeignKey(User)
-    video = select2_fields.ForeignKey(Video)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
     status = models.CharField(
         _('Note availibility level'), max_length=1,
         choices=NOTES_STATUS, default="0",
@@ -1469,10 +1457,10 @@ class AdvancedNotes(models.Model):
 
 
 class NoteComments(models.Model):
-    user = select2_fields.ForeignKey(User)
-    parentNote = models.ForeignKey(AdvancedNotes)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    parentNote = models.ForeignKey(AdvancedNotes, on_delete=models.CASCADE)
     parentCom = models.ForeignKey(
-        "NoteComments", blank=True, null=True)
+        "NoteComments", blank=True, null=True, on_delete=models.CASCADE)
     status = models.CharField(
         _('Comment availibility level'), max_length=1,
         choices=NOTES_STATUS, default="0",
@@ -1506,7 +1494,7 @@ class NoteComments(models.Model):
 class VideoToDelete(models.Model):
     date_deletion = models.DateField(
         _('Date for deletion'), default=date.today, unique=True)
-    video = select2_fields.ManyToManyField(
+    video = models.ManyToManyField(
         Video,
         verbose_name=_('Videos'))
 

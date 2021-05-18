@@ -47,7 +47,7 @@ def authentication_login(request):
     referrer = request.GET['referrer'] if request.GET.get('referrer') else '/'
     iframe_param = 'is_iframe=true&' if (
         request.GET.get('is_iframe')) else ''
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return redirect(referrer)
     if USE_CAS and CAS_GATEWAY:
         url = reverse('authentication_login_gateway')
@@ -72,7 +72,7 @@ def local_logout(request):
 
 
 def authentication_logout(request):
-    if request.user.is_anonymous():
+    if request.user.is_anonymous:
         return local_logout(request)
     if request.user.owner.auth_type == "CAS":
         return redirect(reverse('cas-logout'))

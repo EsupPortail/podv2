@@ -33,7 +33,7 @@ def add_placeholder_and_asterisk(fields):
         else:
             if fields[myField].required:
                 fields[myField].label = mark_safe(
-                    "%s <span class=\"required\">*</span>" %
+                    "%s <span class=\"required_star\">*</span>" %
                     fields[myField].label
                 )
                 fields[myField].widget.attrs["required"] = ""
@@ -75,7 +75,7 @@ class ContactUsForm(forms.Form):
     def __init__(self, request, *args, **kwargs):
         super(ContactUsForm, self).__init__(*args, **kwargs)
 
-        if request.user and request.user.is_authenticated():
+        if request.user and request.user.is_authenticated:
             self.fields['name'].widget = forms.HiddenInput()
             self.fields['email'].widget = forms.HiddenInput()
             self.initial['name'] = "%s" % request.user

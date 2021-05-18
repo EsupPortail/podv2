@@ -9,11 +9,11 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.5, 3.6, 3.7]
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -45,9 +45,9 @@ jobs:
         stack-version: 7.6.0
     - name: Setup Pod
       run: |
-        python manage.py create_pod_index
-        python manage.py makemigrations
-        python manage.py migrate
+        python manage.py create_pod_index --settings=pod.main.test_settings
+        python manage.py makemigrations --settings=pod.main.test_settings
+        python manage.py migrate --settings=pod.main.test_settings
     - name: Run Tests and coveralls
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

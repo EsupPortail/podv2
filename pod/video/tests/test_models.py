@@ -238,7 +238,7 @@ class TypeTestCase(TestCase):
 
     def test_delete_object(self):
         Type.objects.get(id=1).delete()
-        self.assertEquals(Type.objects.all().count(), 0)
+        self.assertEqual(Type.objects.all().count(), 0)
         print(
             "   --->  test_delete_object of TypeTestCase : OK !")
 
@@ -342,9 +342,12 @@ class VideoTestCase(TestCase):
         print(" --->  SetUp of VideoTestCase : OK !")
 
     def test_last_Video_display(self):
-
         filter_en = Video.objects.filter(
             encoding_in_progress=False, is_draft=False)
+        print("===== VIDEOSS =====")
+        for vid in filter_en:
+            print(vid.id)
+            print(vid.thumbnail.id)
         filter_pass = filter_en.filter(
             Q(password='') | Q(password=None), is_restricted=False)
         self.assertEqual(bool(filter_pass.filter(password='toto')), False)
@@ -363,20 +366,18 @@ class VideoTestCase(TestCase):
         self.assertEqual(video.slug,
                          "%04d-%s" % (video.id, slugify(video.title)))
         date = datetime.today()
-
         self.assertEqual(video.owner, User.objects.get(username="pod"))
         self.assertEqual(video.date_added.year, date.year)
         self.assertEqual(video.date_added.month, date.month)
         self.assertEqual(video.date_added.day, date.day)
         # self.assertEqual(video.date_evt, video.date_added)
-
         self.assertEqual(video.get_viewcount(), 0)
 
         self.assertEqual(video.is_draft, True)
 
         if isinstance(video.thumbnail, ImageFieldFile):
+            print(video)
             self.assertEqual(video.thumbnail.name, '')
-
         self.assertEqual(video.duration, 0)
         # self.assertEqual(pod.get_absolute_url(), "/video/" + pod.slug + "/")
         self.assertEqual(video.__str__(), "%s - %s" %

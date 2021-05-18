@@ -525,14 +525,14 @@ def get_video_access(request, video, slug_private):
         access_granted_for_private = (
             slug_private and slug_private == video.get_hashkey()
         )
-        access_granted_for_draft = request.user.is_authenticated() and (
+        access_granted_for_draft = request.user.is_authenticated and (
             request.user == video.owner or request.user.is_superuser or
             request.user.has_perm("video.change_video") or (
                 request.user in video.additional_owners.all()))
         access_granted_for_restricted = (
-            request.user.is_authenticated() and not is_restricted_to_group)
+            request.user.is_authenticated and not is_restricted_to_group)
         access_granted_for_group = (
-            request.user.is_authenticated()
+            request.user.is_authenticated
             and is_in_video_groups(request.user, video)
 
         ) or request.user == video.owner or request.user.is_superuser or \
@@ -680,7 +680,7 @@ def render_video(request, id, slug_c=None, slug_t=None, slug_private=None,
                     **more_data
                 }
             )
-        elif request.user.is_authenticated():
+        elif request.user.is_authenticated:
             messages.add_message(
                 request, messages.ERROR,
                 _('You cannot watch this video.'))
@@ -928,7 +928,8 @@ def can_edit_or_remove_note_or_com(request, nc, action):
 
 def can_see_note_or_com(request, nc):
     """
-    Check if the current user can view the note or comment nc
+    Check if the current user can view the note or comment nc.
+
     If not raise PermissionDenied
     """
     if isinstance(nc, AdvancedNotes):
@@ -2196,7 +2197,7 @@ class PodChunkedUploadView(ChunkedUploadView):
     field_name = 'the_file'
 
     def check_permissions(self, request):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return False
         elif (RESTRICT_EDIT_VIDEO_ACCESS_TO_STAFF_ONLY
               and request.user.is_staff is False):
@@ -2210,7 +2211,7 @@ class PodChunkedUploadCompleteView(ChunkedUploadCompleteView):
     slug = ""
 
     def check_permissions(self, request):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return False
         elif (RESTRICT_EDIT_VIDEO_ACCESS_TO_STAFF_ONLY
               and request.user.is_staff is False):
@@ -2245,8 +2246,11 @@ class PodChunkedUploadCompleteView(ChunkedUploadCompleteView):
 
 
 @csrf_protect
+@ensure_csrf_cookie
 @login_required(redirect_field_name='referrer')
 def video_record(request):
+    if in_maintenance():
+        return redirect(reverse('maintenance'))
     if (RESTRICT_EDIT_VIDEO_ACCESS_TO_STAFF_ONLY
             and request.user.is_staff is False):
         return render(request,

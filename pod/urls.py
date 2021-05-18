@@ -44,8 +44,11 @@ from pod.main.rest_router import urlpatterns as rest_urlpatterns
 from pod.video_search.views import search_videos
 from pod.recorder.views import add_recording, recorder_notify, claim_record,\
     delete_record
-from pod.lti.views import LTIAssignmentAddVideoView, LTIAssignmentGetVideoView
+# from pod.lti.views import LTIAssignmentAddVideoView,
+# LTIAssignmentGetVideoView
 from pod.video.views import PodChunkedUploadView, PodChunkedUploadCompleteView
+from django.urls import path
+
 
 USE_CAS = getattr(
     settings, 'USE_CAS', False)
@@ -63,13 +66,12 @@ if USE_CAS:
 
 
 urlpatterns = [
+    path("select2/", include("django_select2.urls")),
     url(r'^admin/', admin.site.urls),
 
     # Translation
     url(r'^i18n/', include('django.conf.urls.i18n')),
     url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
-    # progressbar
-    url(r'^progressbarupload/', include('progressbarupload.urls')),
 
     # App video
     url(r'^videos/$', videos, name='videos'),
@@ -159,8 +161,6 @@ urlpatterns = [
     url(r'^captcha/', include('captcha.urls')),
     url(r'^download/$', download_file, name='download_file'),
 
-    # django-select2-form
-    url(r'^select2/', include('select2.urls')),
 
     # custom
     url(r'^custom/', include('pod.custom.urls')),
@@ -212,15 +212,15 @@ for apps in settings.THIRD_PARTY_APPS:
 ##
 # LTI feature patterns
 #
-if getattr(settings, 'LTI_ENABLED', False):
-    # LTI href
-    urlpatterns += [
-        url(r'^lti/', include('lti_provider.urls')),
-        url(r'^assignment/addvideo/',
-            LTIAssignmentAddVideoView.as_view()),
-        url(r'^assignment/getvideo/',
-            LTIAssignmentGetVideoView.as_view()),
-    ]
+# if getattr(settings, 'LTI_ENABLED', False):
+#    # LTI href
+#    urlpatterns += [
+#        url(r'^lti/', include('lti_provider.urls')),
+#        url(r'^assignment/addvideo/',
+#            LTIAssignmentAddVideoView.as_view()),
+#        url(r'^assignment/getvideo/',
+#            LTIAssignmentGetVideoView.as_view()),
+#    ]
 ##
 # H5P feature patterns
 #

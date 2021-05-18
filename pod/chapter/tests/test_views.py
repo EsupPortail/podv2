@@ -98,7 +98,6 @@ class ChapterViewsTestCase(TestCase):
         response = self.client.post(
             '/video_chapter/{0}/'.format(video.slug),
             data={'action': 'save',
-                  'chapter_id': None,
                   'video': 1,
                   'title': 'testchapter',
                   'time_start': 1,
@@ -121,7 +120,6 @@ class ChapterViewsTestCase(TestCase):
         response = self.client.post(
             '/video_chapter/{0}/'.format(video.slug),
             data={'action': 'save',
-                  'chapter_id': None,
                   'video': 1,
                   'title': 'testchapter',
                   'time_start': 1,
@@ -154,7 +152,6 @@ class ChapterViewsTestCase(TestCase):
         response = self.client.post(
             '/video_chapter/{0}/'.format(video.slug),
             data={'action': 'save',
-                  'chapter_id': None,
                   'video': 1,
                   'title': 'testchapter',
                   'time_start': 1,

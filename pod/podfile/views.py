@@ -68,7 +68,6 @@ def home(request, type=None):
         raise SuspiciousOperation('--> Invalid type')
     user_home_folder = get_object_or_404(
         UserFolder, name="home", owner=request.user)
-
     share_folder = UserFolder.objects.filter(
         access_groups=request.user.owner.accessgroup_set.all()).exclude(
             owner=request.user).order_by('owner', 'id')
@@ -76,12 +75,9 @@ def home(request, type=None):
     share_folder_user = UserFolder.objects.filter(
         users=request.user).exclude(
             owner=request.user).order_by('owner', 'id')
-
     current_session_folder = get_current_session_folder(request)
-
     template = 'podfile/home_content.html' if (
         request.is_ajax()) else 'podfile/home.html'
-
     return render(request,
                   template,
                   {
@@ -98,15 +94,19 @@ def home(request, type=None):
 
 
 def get_current_session_folder(request):
+    print("TEST COUCOU")
+    print(request.session.get('current_session_folder', "home"))
+    print("TEST COUCOU 1")
     try:
         current_session_folder = UserFolder.objects.filter(
            Q(owner=request.user, name=request.session.get(
               'current_session_folder', "home")) | Q(
                  users=request.user, name=request.session.get(
                     'current_session_folder', "home")) | Q(
-                 access_groups=request.user.owner.accessgroup_set.all(
+                 access_groups__in=request.user.owner.accessgroup_set.all(
                  ), name=request.session.get(
                          'current_session_folder', "home")))
+        print(current_session_folder)
     except ObjectDoesNotExist:
         if(request.user.is_superuser):
             try:
@@ -119,7 +119,9 @@ def get_current_session_folder(request):
             owner=request.user,
             name="home"
         )
-
+    print("TEST COUCOU2")
+    print(current_session_folder)
+    print("TEST COUCOU3")
     return current_session_folder.first()
 
 
@@ -487,8 +489,10 @@ def changefile(request):
 
 # keep it for completion part....
 def file_edit_save(request, folder):
+    print(request.FILES)
     form_file = None
     if (request.POST.get("file_id")
+            and request.POST.get("file_id") is not None
             and request.POST.get("file_id") != "None"):
         customfile = get_object_or_404(
             CustomFileModel, id=request.POST['file_id'])
@@ -497,8 +501,10 @@ def file_edit_save(request, folder):
     else:
         form_file = CustomFileModelForm(request.POST, request.FILES)
     if form_file.is_valid():
-        if form_file.cleaned_data["folder"] != folder:
-            raise SuspiciousOperation('Folder must be the same')
+        print(form_file.cleaned_data["folder"])
+        print(folder)
+        # if form_file.cleaned_data["folder"] != folder:
+        #    raise SuspiciousOperation('Folder must be the same')
         customfile = form_file.save(commit=False)
         if hasattr(form_file.instance, 'created_by'):
             customfile.created_by = form_file.instance.created_by
