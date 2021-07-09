@@ -40,7 +40,7 @@
 <script>
   {% if request.GET.is_iframe and request.GET.is_iframe == 'true' %}
   $('#playlist div').first()
-                    .append('<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>')
+                    .append('<button type="button" class="close hidden" aria-label="Close"><span aria-hidden="true">&times;</span></button>')
   $('#playlist h3').append('<button class="btn btn-primary">{% trans 'Launch' %}</button>')
                    .on('click',function(){
                      player.play();
