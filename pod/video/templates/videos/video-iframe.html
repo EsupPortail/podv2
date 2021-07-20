@@ -214,10 +214,6 @@
         player.width(height*hdres);
         document.getElementById("podvideoplayer").style.marginTop = "0";
       }
-      //player.height(player.height()-7); //Not seem to be need with new vjs version
-      // if(document.getElementById("info-video").style.display=="block") {
-      //   resizeInfoVideo();
-      // }
       {% if playlist %}
       resizePlaylist();
       {% endif %}
@@ -237,16 +233,6 @@
       if(wasPlaying) player.play();
     }
   }
-
-  // function resizeInfoVideo() {
-  //   var height = document.getElementById("podvideoplayer").offsetHeight-30-player.controlBar.el_.offsetHeight;
-  //   var width = document.getElementById("podvideoplayer").offsetWidth-30;
-  //   var margintop = document.getElementById("podvideoplayer").offsetHeight-10;
-  //   document.getElementById("info-video").style.width = width+"px";
-  //   document.getElementById("info-video").style.height = height+"px";
-  //   document.getElementById("info-video").style.marginTop = "-"+margintop+"px";
-  // }
-
 
   $(document).on('click', '.close', function(){
       $(this).parent('DIV').parent('DIV').css('display','none');
