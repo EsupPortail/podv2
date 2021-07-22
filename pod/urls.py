@@ -20,6 +20,7 @@ from pod.video.views import video
 from pod.video.views import video_edit
 from pod.video.views import video_add
 from pod.video.views import video_delete
+from pod.video.views import video_all_info
 
 # from pod.video.views import video_collaborate
 from pod.video.views import channel
@@ -96,6 +97,16 @@ urlpatterns = [
         r"^rss-audio/(?P<slug_c>[\-\d\w]+)/(?P<slug_t>[\-\d\w]+)/$",
         RssSiteAudiosFeed(),
         name="rss-audio",
+    ),
+    url(
+        r"^video_info/(?P<slug>[\-\d\w]+)/$",
+        video_all_info,
+        name="video_all_info"
+    ),
+    url(
+        r"^video_info/(?P<slug>[\-\d\w]+)/(?P<slug_private>[\-\d\w]+)/$",
+        video_all_info,
+        name="video_all_info"
     ),
     url(r"^video/(?P<slug>[\-\d\w]+)/$", video, name="video"),
     url(

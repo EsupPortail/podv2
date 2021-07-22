@@ -664,6 +664,51 @@ def get_video_access(request, video, slug_private):
     else:
         return True
 
+def video_all_info(request, slug, slug_private=None):
+    try:
+        id = int(slug[: slug.find("-")])
+    except ValueError:
+        raise SuspiciousOperation("Invalid video id")
+    video = get_object_or_404(Video
+                             ,id = id
+                             ,sites=get_current_site(request))
+    is_password_protected = video.password is not None and video.password != ""
+    show_page = get_video_access(request, video, slug_private)
+
+    if (
+        (show_page and not is_password_protected)
+        or (
+            show_page
+            and is_password_protected
+            and request.POST.get("password")
+            and request.POST.get("password") == video.password
+        )
+        or (slug_private and slug_private == video.get_hashkey())
+        or request.user == video.owner
+        or request.user.is_superuser
+        or request.user.has_perm("video.change_video")
+        or (request.user in video.additional_owners.all())
+    ):
+        if request.GET.get("is_iframe") and request.GET.get("is_iframe") == 'true':
+            template_info = 'videos/video-info.html'
+            params = { "video": video }
+        else:
+            playlist = (
+                get_object_or_404(Playlist, slug=request.GET["playlist"])
+                if request.GET.get("playlist")
+                else None
+            )
+            if playlist and request.user != playlist.owner and not playlist.visible:
+                messages.add_message(
+                    request,
+                    messages.ERROR,
+                    _("You don't have access to this playlist."),
+                )
+                raise PermissionDenied
+            template_info = 'videos/video-all-info.html'
+            params = { "video": video, "playlist": playlist }
+
+        return render(request, template_info, params)
 
 @csrf_protect
 def video(request, slug, slug_c=None, slug_t=None, slug_private=None):
