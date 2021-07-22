@@ -688,8 +688,9 @@ def video_all_info(request, slug, slug_private=None):
         or request.user.has_perm("video.change_video")
         or (request.user in video.additional_owners.all())
     ):
-        if request.GET.get("is_iframe") and request.GET.get("is_iframe") == 'true':
-            template_info = 'videos/video-info.html'
+
+        if request.GET.get("is_iframe") and request.GET.get("is_iframe") == "true":
+            template_info = "videos/video-info.html"
             params = {"video": video}
         else:
             playlist = (
@@ -704,7 +705,7 @@ def video_all_info(request, slug, slug_private=None):
                     _("You don't have access to this playlist."),
                 )
                 raise PermissionDenied
-            template_info = 'videos/video-all-info.html'
+            template_info = "videos/video-all-info.html"
             params = {"video": video, "playlist": playlist}
 
         return render(request, template_info, params)

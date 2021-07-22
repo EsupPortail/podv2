@@ -98,15 +98,11 @@ urlpatterns = [
         RssSiteAudiosFeed(),
         name="rss-audio",
     ),
-    url(
-        r"^video_info/(?P<slug>[\-\d\w]+)/$",
-        video_all_info,
-        name="video_all_info"
-    ),
+    url(r"^video_info/(?P<slug>[\-\d\w]+)/$", video_all_info, name="video_all_info"),
     url(
         r"^video_info/(?P<slug>[\-\d\w]+)/(?P<slug_private>[\-\d\w]+)/$",
         video_all_info,
-        name="video_all_info"
+        name="video_all_info",
     ),
     url(r"^video/(?P<slug>[\-\d\w]+)/$", video, name="video"),
     url(
