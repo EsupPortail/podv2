@@ -664,14 +664,13 @@ def get_video_access(request, video, slug_private):
     else:
         return True
 
+
 def video_all_info(request, slug, slug_private=None):
     try:
         id = int(slug[: slug.find("-")])
     except ValueError:
         raise SuspiciousOperation("Invalid video id")
-    video = get_object_or_404(Video
-                             ,id = id
-                             ,sites=get_current_site(request))
+    video = get_object_or_404(Video, id=id, sites=get_current_site(request))
     is_password_protected = video.password is not None and video.password != ""
     show_page = get_video_access(request, video, slug_private)
 
@@ -689,9 +688,9 @@ def video_all_info(request, slug, slug_private=None):
         or request.user.has_perm("video.change_video")
         or (request.user in video.additional_owners.all())
     ):
-        if request.GET.get("is_iframe") and request.GET.get("is_iframe") == 'true':
-            template_info = 'videos/video-info.html'
-            params = { "video": video }
+        if request.GET.get("is_iframe") and request.GET.get("is_iframe") == "true":
+            template_info = "videos/video-info.html"
+            params = {"video": video}
         else:
             playlist = (
                 get_object_or_404(Playlist, slug=request.GET["playlist"])
@@ -705,10 +704,11 @@ def video_all_info(request, slug, slug_private=None):
                     _("You don't have access to this playlist."),
                 )
                 raise PermissionDenied
-            template_info = 'videos/video-all-info.html'
-            params = { "video": video, "playlist": playlist }
+            template_info = "videos/video-all-info.html"
+            params = {"video": video, "playlist": playlist}
 
         return render(request, template_info, params)
+
 
 @csrf_protect
 def video(request, slug, slug_c=None, slug_t=None, slug_private=None):
